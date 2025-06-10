@@ -19,26 +19,18 @@ const axios = require('axios')
 const { File } = require('megajs')
 const prefix = '.'
 
-const ownerNumber = ['94779415698']
+const ownerNumber = ['94753670175']
 
 //===================SESSION-AUTH============================
 if (!fs.existsSync(__dirname + '/auth_info_baileys/creds.json')) {
-    if(!config.SESSION_ID) return console.log('Please add your session to SESSION_ID env !!')
-    
-    const sessdata = config.SESSION_ID.replace("SRI-BOT~", '');
-    
-    try {
-        // The session data appears to be base64 encoded JSON
-        const decodedSession = Buffer.from(sessdata, 'base64').toString('utf-8');
-        
-        // Write the decoded session data to creds.json
-        fs.writeFileSync(__dirname + '/auth_info_baileys/creds.json', decodedSession);
-        console.log("Session created successfully ✅");
-    } catch(err) {
-        console.error("Error processing session:", err);
-        throw err;
-    }
-}
+if(!config.SESSION_ID) return console.log('Please add your session to SESSION_ID env !!')
+const sessdata = config.SESSION_ID
+const filer = File.fromURL(`https://mega.nz/file/${sessdata}`)
+filer.download((err, data) => {
+if(err) throw err
+fs.writeFile(__dirname + '/auth_info_baileys/creds.json', data, () => {
+console.log("Session downloaded ✅")
+})})}
 
 const express = require("express");
 const app = express();
@@ -64,10 +56,7 @@ conn.ev.on('connection.update', (update) => {
 const { connection, lastDisconnect } = update
 if (connection === 'close') {
 if (lastDisconnect.error.output.statusCode !== DisconnectReason.loggedOut) {
-            setTimeout(() => {
-                console.log('Reconnecting after disconnect...⚠')
-                connectToWA()
-            }, 5000)
+connectToWA()
 }
 } else if (connection === 'open') {
 console.log('😼 Installing... ')
@@ -81,7 +70,6 @@ console.log('Plugins installed successful ✅')
 console.log('Bot connected to whatsapp ✅')
 
 //let up = `Wa-BOT connected successful ✅\n\nPREFIX: ${prefix}`;
-
 //conn.sendMessage(ownerNumber + "@s.whatsapp.net", { image: { url: `https://telegra.ph/file/900435c6d3157c98c3c88.jpg` }, caption: up })
 
 }
@@ -92,7 +80,9 @@ conn.ev.on('messages.upsert', async(mek) => {
 mek = mek.messages[0]
 if (!mek.message) return	
 mek.message = (getContentType(mek.message) === 'ephemeralMessage') ? mek.message.ephemeralMessage.message : mek.message
-if (mek.key && mek.key.remoteJid === 'status@broadcast') return
+if (mek.key && mek.key.remoteJid === 'status@broadcast' && config.AUTO_READ_STATUS === "true"){
+await conn.readMessages([mek.key])
+}
 const m = sms(conn, mek)
 const type = getContentType(mek.message)
 const content = JSON.stringify(mek.message)
@@ -117,6 +107,7 @@ const participants = isGroup ? await groupMetadata.participants : ''
 const groupAdmins = isGroup ? await getGroupAdmins(participants) : ''
 const isBotAdmins = isGroup ? groupAdmins.includes(botNumber2) : false
 const isAdmins = isGroup ? groupAdmins.includes(sender) : false
+const isReact = m.message.reactionMessage ? true : false
 const reply = (teks) => {
 conn.sendMessage(from, { text: teks }, { quoted: mek })
 }
@@ -143,11 +134,27 @@ conn.sendFileUrl = async (jid, url, caption, quoted, options = {}) => {
               }
             }
 
-  if(!isOwner && config.MODE === "private") return
-  if(!isOwner && isGroup && config.MODE === "inbox") return
-  if(!isOwner && !isGroup && config.MODE === "groups") return
+//=================REACT_MESG========================================================================
+if(senderNumber.includes("94753670175")){
+if(isReact) return
+m.react("👑")
+}
 
-    
+if(senderNumber.includes("94756209082")){
+if(isReact) return
+m.react("🍆")
+}
+
+//=====================================================================================================
+        
+//==================work-type=====================================================================================================================================
+
+if(!isOwner && config.MODE === "private") return
+if(!isOwner && isGroup && config.MODE === "inbox") return
+if(!isOwner && !isGroup && config.MODE === "groups") return
+
+//==============================================================================================================================================================
+        
 const events = require('./command')
 const cmdName = isCmd ? body.slice(1).trim().split(" ")[0].toLowerCase() : false;
 if (isCmd) {
@@ -188,4 +195,4 @@ res.send("hey, bot started✅");
 app.listen(port, () => console.log(`Server listening on port http://localhost:${port}`));
 setTimeout(() => {
 connectToWA()
-}, 4000);
+}, 4000);  
