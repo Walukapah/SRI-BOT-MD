@@ -64,7 +64,10 @@ conn.ev.on('connection.update', (update) => {
 const { connection, lastDisconnect } = update
 if (connection === 'close') {
 if (lastDisconnect.error.output.statusCode !== DisconnectReason.loggedOut) {
-connectToWA()
+            setTimeout(() => {
+                console.log('Reconnecting after disconnect...⚠')
+                connectToWA()
+            }, 5000)
 }
 } else if (connection === 'open') {
 console.log('😼 Installing... ')
