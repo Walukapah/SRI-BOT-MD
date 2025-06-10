@@ -21,22 +21,25 @@ const prefix = '.'
 
 const ownerNumber = ['94753670175']
 
-//===================SESSION-AUTH============================
-if (!fs.existsSync(__dirname + '/auth_info_baileys/creds.json')) {
-    if(!config.SESSION_ID) return console.log('Please add your session to SESSION_ID env !!')
-    
-    const sessdata = config.SESSION_ID.replace("SRI-BOT~", '');
+//===================SESSION-AUTH============================if (!fs.existsSync(__dirname + '/auth_info_baileys/creds.json')) {
+    if(!config.SESSION_ID) {
+        console.log('Please add your session to SESSION_ID env !!');
+        process.exit(1); // Exit if no session ID
+    }
     
     try {
-        // The session data appears to be base64 encoded JSON
-        const decodedSession = Buffer.from(sessdata, 'base64').toString('utf-8');
+        // Create directory if it doesn't exist
+        if (!fs.existsSync(__dirname + '/auth_info_baileys')) {
+            fs.mkdirSync(__dirname + '/auth_info_baileys');
+        }
         
-        // Write the decoded session data to creds.json
+        const sessdata = config.SESSION_ID.replace("SRI-BOT~", '');
+        const decodedSession = Buffer.from(sessdata, 'base64').toString('utf-8');
         fs.writeFileSync(__dirname + '/auth_info_baileys/creds.json', decodedSession);
         console.log("Session created successfully ✅");
     } catch(err) {
         console.error("Error processing session:", err);
-        throw err;
+        process.exit(1);
     }
 }
 
@@ -52,7 +55,7 @@ const { state, saveCreds } = await useMultiFileAuthState(__dirname + '/auth_info
 var { version } = await fetchLatestBaileysVersion()
 
 const conn = makeWASocket({
-        logger: P({ level: 'silent' }),
+        logger: P({ level: 'debug' }),
         printQRInTerminal: false,
         browser: Browsers.macOS("Firefox"),
         syncFullHistory: true,
@@ -64,7 +67,11 @@ conn.ev.on('connection.update', (update) => {
 const { connection, lastDisconnect } = update
 if (connection === 'close') {
 if (lastDisconnect.error.output.statusCode !== DisconnectReason.loggedOut) {
-connectToWA()
+
+    setTimeout(() => {
+                console.log('Reconnecting after disconnect...')
+                connectToWA()
+            }, 5000)
 }
 } else if (connection === 'open') {
 console.log('😼 Installing... ')
