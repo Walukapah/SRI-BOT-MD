@@ -25,7 +25,7 @@ const ownerNumber = ['94753670175']
     if(!config.SESSION_ID) {
         console.log('Please add your session to SESSION_ID env !!');
         process.exit(1); // Exit if no session ID
-    }
+    
     
     try {
         // Create directory if it doesn't exist
