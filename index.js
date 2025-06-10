@@ -19,27 +19,24 @@ const axios = require('axios')
 const { File } = require('megajs')
 const prefix = '.'
 
-const ownerNumber = ['94753670175']
+const ownerNumber = ['94779415698']
 
-//===================SESSION-AUTH============================if (!fs.existsSync(__dirname + '/auth_info_baileys/creds.json')) {
-    if(!config.SESSION_ID) {
-        console.log('Please add your session to SESSION_ID env !!');
-        process.exit(1); // Exit if no session ID
+//===================SESSION-AUTH============================
+if (!fs.existsSync(__dirname + '/auth_info_baileys/creds.json')) {
+    if(!config.SESSION_ID) return console.log('Please add your session to SESSION_ID env !!')
     
+    const sessdata = config.SESSION_ID.replace("SRI-BOT~", '');
     
     try {
-        // Create directory if it doesn't exist
-        if (!fs.existsSync(__dirname + '/auth_info_baileys')) {
-            fs.mkdirSync(__dirname + '/auth_info_baileys');
-        }
-        
-        const sessdata = config.SESSION_ID.replace("SRI-BOT~", '');
+        // The session data appears to be base64 encoded JSON
         const decodedSession = Buffer.from(sessdata, 'base64').toString('utf-8');
+        
+        // Write the decoded session data to creds.json
         fs.writeFileSync(__dirname + '/auth_info_baileys/creds.json', decodedSession);
         console.log("Session created successfully ✅");
     } catch(err) {
         console.error("Error processing session:", err);
-        process.exit(1);
+        throw err;
     }
 }
 
@@ -67,11 +64,7 @@ conn.ev.on('connection.update', (update) => {
 const { connection, lastDisconnect } = update
 if (connection === 'close') {
 if (lastDisconnect.error.output.statusCode !== DisconnectReason.loggedOut) {
-
-    setTimeout(() => {
-                console.log('Reconnecting after disconnect...')
-                connectToWA()
-            }, 5000)
+connectToWA()
 }
 } else if (connection === 'open') {
 console.log('😼 Installing... ')
@@ -147,10 +140,6 @@ conn.sendFileUrl = async (jid, url, caption, quoted, options = {}) => {
               }
             }
 
-if(!isOwner && config.MODE === "private") return
-if(!isOwner && isGroup && config.MODE === "inbox") return
-if(!isOwner && !isGroup && config.MODE === "groups") return
-
 
 const events = require('./command')
 const cmdName = isCmd ? body.slice(1).trim().split(" ")[0].toLowerCase() : false;
@@ -184,8 +173,6 @@ command.function(conn, mek, m,{from, l, quoted, body, isCmd, command, args, q, i
 }});
 //============================================================================ 
 
-
-        
 })
 }
 app.get("/", (req, res) => {
@@ -194,4 +181,4 @@ res.send("hey, bot started✅");
 app.listen(port, () => console.log(`Server listening on port http://localhost:${port}`));
 setTimeout(() => {
 connectToWA()
-}, 4000);  
+}, 4000);
