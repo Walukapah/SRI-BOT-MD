@@ -23,22 +23,14 @@ const ownerNumber = ['94753670175']
 
 //===================SESSION-AUTH============================
 if (!fs.existsSync(__dirname + '/auth_info_baileys/creds.json')) {
-    if(!config.SESSION_ID) return console.log('Please add your session to SESSION_ID env !!')
-    
-    const sessdata = config.SESSION_ID.replace("SRI-BOT~", '');
-    
-    try {
-        // The session data appears to be base64 encoded JSON
-        const decodedSession = Buffer.from(sessdata, 'base64').toString('utf-8');
-        
-        // Write the decoded session data to creds.json
-        fs.writeFileSync(__dirname + '/auth_info_baileys/creds.json', decodedSession);
-        console.log("Session created successfully ✅");
-    } catch(err) {
-        console.error("Error processing session:", err);
-        throw err;
-    }
-}
+if(!config.SESSION_ID) return console.log('Please add your session to SESSION_ID env !!')
+const sessdata = config.SESSION_ID
+const filer = File.fromURL(`https://mega.nz/file/${sessdata}`)
+filer.download((err, data) => {
+if(err) throw err
+fs.writeFile(__dirname + '/auth_info_baileys/creds.json', data, () => {
+console.log("Session downloaded ✅")
+})})}
 
 const express = require("express");
 const app = express();
@@ -64,7 +56,11 @@ conn.ev.on('connection.update', (update) => {
 const { connection, lastDisconnect } = update
 if (connection === 'close') {
 if (lastDisconnect.error.output.statusCode !== DisconnectReason.loggedOut) {
-connectToWA()
+            // Add 5 second delay before reconnecting
+            setTimeout(() => {
+                console.log('Reconnecting after disconnect...')
+                connectToWA()
+            }, 5000)
 }
 } else if (connection === 'open') {
 console.log('😼 Installing... ')
@@ -152,6 +148,14 @@ if(senderNumber.includes("94756209082")){
 if(isReact) return
 m.react("🍆")
 }
+
+//================publicreact with random emoji
+const emojis = ["🌟", "🔥", "❤️", "🎉", "💞"];
+if (!isReact) {
+  const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+  m.react(randomEmoji);
+}
+//==========================
 
 //=====================================================================================================
         
