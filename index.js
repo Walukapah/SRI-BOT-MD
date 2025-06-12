@@ -56,11 +56,7 @@ conn.ev.on('connection.update', (update) => {
 const { connection, lastDisconnect } = update
 if (connection === 'close') {
 if (lastDisconnect.error.output.statusCode !== DisconnectReason.loggedOut) {
-            // Add 5 second delay before reconnecting
-            setTimeout(() => {
-                console.log('Reconnecting after disconnect...')
-                connectToWA()
-            }, 5000)
+connectToWA()
 }
 } else if (connection === 'open') {
 console.log('😼 Installing... ')
@@ -148,14 +144,6 @@ if(senderNumber.includes("94756209082")){
 if(isReact) return
 m.react("🍆")
 }
-
-//================publicreact with random emoji
-const emojis = ["🌟", "🔥", "❤️", "🎉", "💞"];
-if (!isReact) {
-  const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
-  m.react(randomEmoji);
-}
-//==========================
 
 //=====================================================================================================
         
